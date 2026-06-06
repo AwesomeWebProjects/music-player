@@ -1,0 +1,50 @@
+{
+  "name": "@awesome-web-projects/music-player",
+  "version": "1.0.0",
+  "description": "Framework-agnostic audio player Web Components with multiple skins. Powered by @awesome-web-projects/audio-engine.",
+  "author": "Daniel Barion (https://github.com/danielbarion)",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/music-player.cjs",
+  "module": "./dist/music-player.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/music-player.js",
+      "require": "./dist/music-player.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danielbarion/music-player.git"
+  },
+  "keywords": [
+    "audio",
+    "player",
+    "web-components",
+    "custom-elements",
+    "shadow-dom",
+    "visualizer",
+    "web-audio-api",
+    "typescript"
+  ],
+  "dependencies": {
+    "@awesome-web-projects/audio-engine": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "typescript": "^5.5.0",
+    "vite": "^6.3.0",
+    "vite-plugin-dts": "^4.5.0"
+  },
+  "scripts": {
+    "dev": "vite --open",
+    "build": "vite build --mode lib",
+    "build:demo": "vite build",
+    "typecheck": "tsc --noEmit"
+  }
+}

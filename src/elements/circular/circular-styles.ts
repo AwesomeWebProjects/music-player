@@ -1,0 +1,212 @@
+export const circularStyles = /* css */ `
+:host {
+  display: block;
+}
+
+.audio-player {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-size: calc(10px + 2vmin);
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.player {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: auto;
+  position: relative;
+  height: 360px;
+  width: 360px;
+}
+
+.canvas {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  display: flex;
+  align-self: center;
+}
+
+.song-info {
+  position: absolute;
+  z-index: 2;
+  top: 2rem;
+  width: 100%;
+  pointer-events: none;
+  user-select: none;
+}
+
+.song-artist {
+  display: flex;
+  justify-content: center;
+  font-size: 22px;
+  margin-bottom: 0.5rem;
+}
+
+.song-name {
+  display: flex;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  gap: 0.5rem;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: opacity 0.2s;
+}
+
+.btn:hover {
+  opacity: 0.7;
+}
+
+.play-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 3px solid;
+  border-radius: 50%;
+  cursor: pointer;
+  width: 104px;
+  height: 104px;
+  padding: 0;
+  transition: opacity 0.2s;
+}
+
+.play-btn:hover {
+  opacity: 0.7;
+}
+
+.footer {
+  position: absolute;
+  z-index: 2;
+  bottom: 2rem;
+  width: 100%;
+}
+
+.volume-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 32px;
+  top: -9px;
+}
+
+.volume-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  transition: opacity 0.2s;
+}
+
+.volume-btn:hover {
+  opacity: 0.7;
+}
+
+.volume-slider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0;
+}
+
+.volume-track {
+  position: relative;
+  width: 120px;
+  height: 4px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.volume-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 2px;
+}
+
+.volume-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%,-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.time {
+  display: flex;
+  justify-content: center;
+  font-size: 18px;
+  margin-top: 0.5rem;
+  pointer-events: none;
+  user-select: none;
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.loader div {
+  position: absolute;
+  border: 4px solid;
+  opacity: 1;
+  border-radius: 50%;
+  animation: loader 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+.loader div:nth-child(2) {
+  animation-delay: -0.5s;
+}
+
+@keyframes loader {
+  0% {
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    margin-top: 0;
+    margin-left: 0;
+    opacity: 1;
+  }
+  100% {
+    top: 50%;
+    left: 50%;
+    width: 70px;
+    height: 70px;
+    margin-top: -35px;
+    margin-left: -35px;
+    opacity: 0;
+  }
+}
+`;

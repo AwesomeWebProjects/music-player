@@ -1,0 +1,142 @@
+export const minimalStyles = /* css */ `
+:host {
+  display: block;
+  max-width: 620px;
+  width: 100%;
+}
+
+.minimal {
+  background: rgba(20, 20, 25, 0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  user-select: none;
+}
+
+.progress-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  position: relative;
+  transition: height 0.15s;
+}
+.progress-track:hover { background: rgba(255, 255, 255, 0.18); }
+
+.progress-fill {
+  height: 100%;
+  border-radius: 0 2px 2px 0;
+  width: 0%;
+}
+
+.progress-shimmer {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  animation: shimmer 2s ease-in-out infinite;
+  background-size: 200% 100%;
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.35rem;
+  transition: opacity 0.2s;
+  border-radius: 50%;
+}
+.btn:hover { opacity: 0.7; background: rgba(255, 255, 255, 0.05); }
+
+.play-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 2px solid;
+  border-radius: 50%;
+  cursor: pointer;
+  width: 36px; height: 36px;
+  padding: 0;
+  transition: opacity 0.2s;
+}
+.play-btn:hover { opacity: 0.7; }
+
+.spin { animation: rotate 1s linear infinite; }
+@keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.artist { color: rgba(255, 255, 255, 0.9); font-size: 13px; font-weight: 600; }
+.separator { color: rgba(255, 255, 255, 0.3); font-size: 13px; }
+.name { color: rgba(255, 255, 255, 0.55); font-size: 13px; text-overflow: ellipsis; overflow: hidden; }
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.time {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.volume-area { position: relative; display: flex; align-items: center; }
+.volume-slider {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 30, 35, 0.95);
+  border-radius: 6px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.volume-track {
+  position: relative;
+  width: 80px; height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  cursor: pointer;
+}
+.volume-fill { position: absolute; top: 0; left: 0; height: 100%; border-radius: 2px; }
+.volume-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px; height: 10px;
+  border-radius: 50%;
+}
+`;
