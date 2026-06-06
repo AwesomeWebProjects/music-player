@@ -1,4 +1,3 @@
-export const vinylStyles = /* css */ `
 :host {
   display: block;
   max-width: 380px;
@@ -50,7 +49,7 @@ export const vinylStyles = /* css */ `
   animation-play-state: paused;
 }
 
-.disc[data-playing] {
+.disc.playing {
   animation-play-state: running;
 }
 
@@ -144,7 +143,7 @@ export const vinylStyles = /* css */ `
   border-radius: 0 0 3px 3px;
 }
 
-.tonearm[data-playing] {
+.tonearm.playing {
   transform: rotate(12deg);
 }
 
@@ -260,6 +259,7 @@ export const vinylStyles = /* css */ `
 
 .spin {
   animation: rotate 1s linear infinite;
+  display: flex;
 }
 
 @keyframes rotate {
@@ -316,4 +316,3 @@ export const vinylStyles = /* css */ `
   height: 10px;
   border-radius: 50%;
 }
-`;

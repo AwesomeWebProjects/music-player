@@ -1,4 +1,3 @@
-export const circularStyles = /* css */ `
 :host {
   display: block;
 }
@@ -209,4 +208,3 @@ export const circularStyles = /* css */ `
     opacity: 0;
   }
 }
-`;

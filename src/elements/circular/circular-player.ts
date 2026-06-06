@@ -1,177 +1,104 @@
-import { formatTime } from '@awesome-web-projects/audio-engine';
+import { html, unsafeCSS, nothing } from 'lit';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { BasePlayer } from '../../shared/base-player';
 import { playIcon, pauseIcon, skipForwardIcon, skipBackIcon, volumeIcon } from '../../shared/icons';
-import { circularStyles } from './circular-styles';
 import { startCircularVisualizer } from './circular-visualizer';
+import styles from './circular-player.css?inline';
 
 export class CircularPlayerElement extends BasePlayer {
-  private volumeOpen = false;
-  private volumeDragging = false;
+  static styles = unsafeCSS(styles);
+
   private visualizer: ReturnType<typeof startCircularVisualizer> | null = null;
 
-  protected render(): void {
-    const color = this._color;
-    const track = this.controller.currentTrack;
-
-    this.shadow.innerHTML = `
-      <style>${circularStyles}</style>
-      <div class="audio-player">
-        <div class="player">
-          <canvas class="canvas" data-el="canvas"></canvas>
-          <div class="song-info">
-            <div class="song-artist" data-el="artist">${track?.artist ?? ''}</div>
-            <div class="song-name" data-el="name">${track?.name ?? ''}</div>
-          </div>
-          <div class="controls">
-            <button class="btn" data-action="prev" aria-label="Previous">${skipBackIcon(24, color)}</button>
-            <button class="play-btn" data-action="toggle" aria-label="Play" style="border-color: ${color}">
-              ${playIcon(36, color)}
-            </button>
-            <button class="btn" data-action="next" aria-label="Next">${skipForwardIcon(24, color)}</button>
-          </div>
-          <div class="footer">
-            <div class="volume-control" data-el="volume-control">
-              <button class="volume-btn" data-action="volume-toggle" aria-label="Volume">${volumeIcon(0.5, 20, color)}</button>
-              <div class="volume-slider" data-el="volume-slider" style="display:none">
-                <div class="volume-track" data-el="volume-track">
-                  <div class="volume-fill" data-el="volume-fill" style="width:50%;background-color:${color}"></div>
-                  <div class="volume-thumb" data-el="volume-thumb" style="left:50%;background-color:${color}"></div>
-                </div>
-              </div>
-            </div>
-            <div class="time" data-el="time">00:00</div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  protected bindEvents(): void {
-    // Button clicks
-    this.shadow.addEventListener('click', (e) => {
-      const target = (e.target as HTMLElement).closest('[data-action]') as HTMLElement | null;
-      if (!target) return;
-      switch (target.dataset.action) {
-        case 'prev': this.controller.prev(); break;
-        case 'next': this.controller.next(); break;
-        case 'toggle': this.controller.togglePlay(); break;
-        case 'volume-toggle':
-          this.volumeOpen = !this.volumeOpen;
-          this.el('[data-el="volume-slider"]').style.display = this.volumeOpen ? '' : 'none';
-          break;
-      }
-    });
-
-    // Volume drag
-    const volumeTrack = this.el<HTMLDivElement>('[data-el="volume-track"]');
-    volumeTrack.addEventListener('mousedown', (e) => {
-      this.volumeDragging = true;
-      this.applyVolume(e);
-    });
-
-    window.addEventListener('mousemove', (e) => {
-      if (this.volumeDragging) this.applyVolume(e);
-    });
-    window.addEventListener('mouseup', () => {
-      this.volumeDragging = false;
-    });
-
-    // Controller events
-    this.controller.on('play', () => {
-      this.updatePlayButton();
-      this.updateVisualizer();
-    });
-    this.controller.on('pause', () => {
-      this.updatePlayButton();
-      this.updateVisualizer();
-    });
-    this.controller.on('loading', () => this.updatePlayButton());
-    this.controller.on('trackchange', (track) => {
-      this.el('[data-el="artist"]').textContent = track.artist;
-      this.el('[data-el="name"]').textContent = track.name;
-    });
-    this.controller.on('timeupdate', (ct) => {
-      this.el('[data-el="time"]').textContent = formatTime(ct);
-    });
-    this.controller.on('volumechange', (v) => {
-      this.updateVolumeUI(v);
-      this.updateVisualizer();
-    });
-    this.controller.on('fullsongloaded', () => this.updateVisualizer());
-
-    // Start visualizer
-    this.startVisualizer();
-  }
-
-  private startVisualizer(): void {
-    const canvas = this.el<HTMLCanvasElement>('[data-el="canvas"]');
-    this.visualizer = startCircularVisualizer(
-      canvas,
-      () => this.controller.analyserNode,
-      () => this.controller.frequencyData,
-      {
-        color: this._color,
-        enabled: true,
-        isPlaying: this.controller.isPlaying,
-        volume: this.controller.volume,
-        getProgress: () => this.controller.getProgress(),
-        isFullSong: this.controller.isFullSong,
-        onSeek: (progress) => this.controller.seek(progress),
-      },
-    );
-  }
-
-  private updateVisualizer(): void {
-    this.visualizer?.update({
-      color: this._color,
-      isPlaying: this.controller.isPlaying,
-      volume: this.controller.volume,
-      isFullSong: this.controller.isFullSong,
-    });
-  }
-
-  private applyVolume(e: MouseEvent): void {
-    const track = this.el<HTMLDivElement>('[data-el="volume-track"]');
-    const rect = track.getBoundingClientRect();
-    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
-    this.controller.setVolume(x / rect.width);
-  }
-
-  private updatePlayButton(): void {
-    const btn = this.el<HTMLButtonElement>('[data-action="toggle"]');
-    const color = this._color;
-    if (this.controller.isLoading) {
-      btn.innerHTML = `<div class="loader"><div style="border-color: ${color}"></div><div style="border-color: ${color}"></div></div>`;
-    } else if (this.controller.isPlaying) {
-      btn.innerHTML = pauseIcon(36, color);
-      btn.setAttribute('aria-label', 'Pause');
-    } else {
-      btn.innerHTML = playIcon(36, color);
-      btn.setAttribute('aria-label', 'Play');
-    }
-  }
-
-  private updateVolumeUI(v: number): void {
-    const fill = this.el<HTMLDivElement>('[data-el="volume-fill"]');
-    const thumb = this.el<HTMLDivElement>('[data-el="volume-thumb"]');
-    const btn = this.el<HTMLButtonElement>('[data-action="volume-toggle"]');
-    fill.style.width = `${v * 100}%`;
-    thumb.style.left = `${v * 100}%`;
-    btn.innerHTML = volumeIcon(v, 20, this._color);
-    btn.setAttribute('aria-label', `Volume: ${Math.round(v * 100)}%`);
-  }
-
-  protected onColorChange(): void {
-    this.visualizer?.stop();
-    this.visualizer = null;
-    this.render();
-    this.bindEvents();
+  firstUpdated(): void {
+    this._initVisualizer();
+    this.controller.on('play', () => this._updateVisualizer());
+    this.controller.on('pause', () => this._updateVisualizer());
+    this.controller.on('volumechange', () => this._updateVisualizer());
+    this.controller.on('fullsongloaded', () => this._updateVisualizer());
   }
 
   disconnectedCallback(): void {
     this.visualizer?.stop();
     this.visualizer = null;
     super.disconnectedCallback();
+  }
+
+  private _initVisualizer(): void {
+    const canvas = this.renderRoot.querySelector('canvas') as HTMLCanvasElement;
+    if (!canvas) return;
+    this.visualizer = startCircularVisualizer(
+      canvas,
+      () => this.controller.analyserNode,
+      () => this.controller.frequencyData,
+      {
+        color: this.color,
+        enabled: true,
+        isPlaying: this._isPlaying,
+        volume: this._volume,
+        getProgress: () => this.controller.getProgress(),
+        isFullSong: this._isFullSong,
+        onSeek: (progress) => this.controller.seek(progress),
+      },
+    );
+  }
+
+  private _updateVisualizer(): void {
+    this.visualizer?.update({
+      color: this.color,
+      isPlaying: this._isPlaying,
+      volume: this._volume,
+      isFullSong: this._isFullSong,
+    });
+  }
+
+  render() {
+    const track = this._currentTrack;
+    const color = this.color;
+    const vPct = `${this._volume * 100}%`;
+
+    return html`
+      <div class="audio-player">
+        <div class="player">
+          <canvas class="canvas"></canvas>
+          <div class="song-info">
+            <div class="song-artist">${track?.artist ?? ''}</div>
+            <div class="song-name">${track?.name ?? ''}</div>
+          </div>
+          <div class="controls">
+            <button class="btn" @click=${() => this.controller.prev()} aria-label="Previous">
+              ${unsafeHTML(skipBackIcon(24, color))}
+            </button>
+            <button class="play-btn" @click=${() => this.controller.togglePlay()}
+                    aria-label=${this._isPlaying ? 'Pause' : 'Play'}
+                    style="border-color: ${color}">
+              ${this._isLoading
+                ? html`<div class="loader"><div style="border-color: ${color}"></div><div style="border-color: ${color}"></div></div>`
+                : unsafeHTML(this._isPlaying ? pauseIcon(36, color) : playIcon(36, color))}
+            </button>
+            <button class="btn" @click=${() => this.controller.next()} aria-label="Next">
+              ${unsafeHTML(skipForwardIcon(24, color))}
+            </button>
+          </div>
+          <div class="footer">
+            <div class="volume-control">
+              <button class="volume-btn" @click=${this._toggleVolume} aria-label="Volume">
+                ${unsafeHTML(volumeIcon(this._volume, 20, color))}
+              </button>
+              ${this._volumeOpen ? html`
+                <div class="volume-slider">
+                  <div class="volume-track" @mousedown=${this._handleVolumeMousedown}>
+                    <div class="volume-fill" style="width: ${vPct}; background-color: ${color}"></div>
+                    <div class="volume-thumb" style="left: ${vPct}; background-color: ${color}"></div>
+                  </div>
+                </div>
+              ` : nothing}
+            </div>
+            <div class="time">${this._formattedTime}</div>
+          </div>
+        </div>
+      </div>
+    `;
   }
 }
 

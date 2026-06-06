@@ -1,87 +1,94 @@
-import { PlayerController } from '@awesome-web-projects/audio-engine';
+import { LitElement } from 'lit';
+import { property, state } from 'lit/decorators.js';
+import { PlayerController, formatTime } from '@awesome-web-projects/audio-engine';
 import type { Track } from '@awesome-web-projects/audio-engine';
 
-export abstract class BasePlayer extends HTMLElement {
+export class BasePlayer extends LitElement {
+  @property({ type: Array })
+  tracks: Track[] = [];
+
+  @property()
+  color = 'rgba(97, 218, 251, 0.8)';
+
+  @property({ attribute: 'initial-volume', type: Number })
+  initialVolume = 0.5;
+
+  @property()
+  thread: 'main' | 'worker' = 'worker';
+
+  @property({ attribute: 'enable-keyboard' })
+  enableKeyboard = 'true';
+
+  @state() protected _isPlaying = false;
+  @state() protected _isLoading = false;
+  @state() protected _isFullSong = false;
+  @state() protected _currentTrack: Track | undefined;
+  @state() protected _formattedTime = '00:00';
+  @state() protected _volume = 0.5;
+  @state() protected _volumeOpen = false;
+  @state() protected _progress = 0;
+
   protected controller!: PlayerController;
-  protected shadow: ShadowRoot;
-  protected _tracks: Track[] = [];
-  protected _color = 'rgba(97, 218, 251, 0.8)';
-  private _connected = false;
-
-  static get observedAttributes(): string[] {
-    return ['color', 'initial-volume', 'thread', 'enable-keyboard'];
-  }
-
-  constructor() {
-    super();
-    this.shadow = this.attachShadow({ mode: 'open' });
-  }
-
-  // --- Properties ---
-
-  set tracks(value: Track[]) {
-    this._tracks = value;
-    if (this._connected) {
-      this.controller.setTracks(value);
-    }
-  }
-
-  get tracks(): Track[] {
-    return this._tracks;
-  }
-
-  // --- Lifecycle ---
+  private _keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 
   connectedCallback(): void {
-    this._connected = true;
-    const initialVolume = parseFloat(this.getAttribute('initial-volume') ?? '0.5');
-    const thread = (this.getAttribute('thread') as 'main' | 'worker') ?? 'worker';
-    this._color = this.getAttribute('color') ?? this._color;
-
+    super.connectedCallback();
+    this._volume = this.initialVolume;
     this.controller = new PlayerController({
-      tracks: this._tracks,
-      thread,
-      initialVolume,
+      tracks: this.tracks,
+      thread: this.thread as 'main' | 'worker',
+      initialVolume: this.initialVolume,
       workerURL: new URL('../worker/audio-worker.ts', import.meta.url),
     });
-
-    this.render();
-    this.bindEvents();
-    this.setupKeyboard();
+    this._currentTrack = this.controller.currentTrack;
+    this._bindControllerEvents();
+    this._setupKeyboard();
   }
 
   disconnectedCallback(): void {
-    this._connected = false;
+    super.disconnectedCallback();
+    if (this._keydownHandler) {
+      document.removeEventListener('keydown', this._keydownHandler);
+    }
     this.controller?.dispose();
   }
 
-  attributeChangedCallback(name: string, _old: string | null, value: string | null): void {
-    if (!this._connected) return;
-
-    switch (name) {
-      case 'color':
-        this._color = value ?? 'rgba(97, 218, 251, 0.8)';
-        this.onColorChange();
-        break;
-      case 'initial-volume':
-        if (value) this.controller.setVolume(parseFloat(value));
-        break;
+  updated(changed: Map<string, unknown>): void {
+    if (changed.has('tracks') && this.controller) {
+      this.controller.setTracks(this.tracks);
+      this._currentTrack = this.controller.currentTrack;
     }
   }
 
-  // --- Abstract methods ---
+  private _bindControllerEvents(): void {
+    this.controller.on('play', () => {
+      this._isPlaying = true;
+      this._isLoading = false;
+    });
+    this.controller.on('pause', () => {
+      this._isPlaying = false;
+    });
+    this.controller.on('loading', (isLoading) => {
+      this._isLoading = isLoading;
+    });
+    this.controller.on('trackchange', (track) => {
+      this._currentTrack = track;
+    });
+    this.controller.on('timeupdate', (ct) => {
+      this._formattedTime = formatTime(ct);
+      this._progress = this.controller.getProgress();
+    });
+    this.controller.on('volumechange', (v) => {
+      this._volume = v;
+    });
+    this.controller.on('fullsongloaded', () => {
+      this._isFullSong = true;
+    });
+  }
 
-  protected abstract render(): void;
-  protected abstract bindEvents(): void;
-  protected abstract onColorChange(): void;
-
-  // --- Shared helpers ---
-
-  protected setupKeyboard(): void {
-    const enabled = this.getAttribute('enable-keyboard') !== 'false';
-    if (!enabled) return;
-
-    const handler = (e: KeyboardEvent) => {
+  private _setupKeyboard(): void {
+    if (this.enableKeyboard === 'false') return;
+    this._keydownHandler = (e: KeyboardEvent) => {
       switch (e.code) {
         case 'Space':
           e.preventDefault();
@@ -95,15 +102,46 @@ export abstract class BasePlayer extends HTMLElement {
           break;
       }
     };
-
-    document.addEventListener('keydown', handler);
+    document.addEventListener('keydown', this._keydownHandler);
   }
 
-  protected el<T extends HTMLElement>(selector: string): T {
-    return this.shadow.querySelector(selector) as T;
+  protected _toggleVolume(): void {
+    this._volumeOpen = !this._volumeOpen;
   }
 
-  protected els<T extends HTMLElement>(selector: string): NodeListOf<T> {
-    return this.shadow.querySelectorAll(selector);
+  protected _handleVolumeMousedown(e: MouseEvent): void {
+    const el = e.currentTarget as HTMLElement;
+    const apply = (ev: MouseEvent) => {
+      const rect = el.getBoundingClientRect();
+      const x = Math.max(0, Math.min(ev.clientX - rect.left, rect.width));
+      this.controller.setVolume(x / rect.width);
+    };
+    apply(e);
+    const onMove = (ev: MouseEvent) => apply(ev);
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }
+
+  protected _handleProgressMousedown(e: MouseEvent): void {
+    if (!this._isFullSong) return;
+    const el = e.currentTarget as HTMLElement;
+    const apply = (ev: MouseEvent) => {
+      if (!this._isFullSong) return;
+      const rect = el.getBoundingClientRect();
+      const x = Math.max(0, Math.min(ev.clientX - rect.left, rect.width));
+      this.controller.seek(x / rect.width);
+    };
+    apply(e);
+    const onMove = (ev: MouseEvent) => apply(ev);
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
   }
 }
