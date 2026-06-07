@@ -1,4 +1,4 @@
-import { html, unsafeCSS, nothing } from 'lit';
+import { html, unsafeCSS } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { BasePlayer } from '../../shared/base-player';
 import { playIcon, pauseIcon, skipForwardIcon, skipBackIcon, volumeIcon } from '../../shared/icons';
@@ -58,7 +58,7 @@ export class CircularPlayerElement extends BasePlayer {
     const vPct = `${this._volume * 100}%`;
 
     return html`
-      <div class="audio-player">
+      <div class="audio-player" style="--rp-color: ${color}">
         <div class="player">
           <canvas class="canvas"></canvas>
           <div class="song-info">
@@ -67,32 +67,33 @@ export class CircularPlayerElement extends BasePlayer {
           </div>
           <div class="controls">
             <button class="btn" @click=${() => this.controller.prev()} aria-label="Previous">
-              ${unsafeHTML(skipBackIcon(24, color))}
+              ${unsafeHTML(skipBackIcon(48, color))}
             </button>
             <button class="play-btn" @click=${() => this.controller.togglePlay()}
                     aria-label=${this._isPlaying ? 'Pause' : 'Play'}
                     style="border-color: ${color}">
               ${this._isLoading
                 ? html`<div class="loader"><div style="border-color: ${color}"></div><div style="border-color: ${color}"></div></div>`
-                : unsafeHTML(this._isPlaying ? pauseIcon(36, color) : playIcon(36, color))}
+                : unsafeHTML(this._isPlaying ? pauseIcon(48, color) : playIcon(48, color))}
             </button>
             <button class="btn" @click=${() => this.controller.next()} aria-label="Next">
-              ${unsafeHTML(skipForwardIcon(24, color))}
+              ${unsafeHTML(skipForwardIcon(48, color))}
             </button>
           </div>
           <div class="footer">
             <div class="volume-control">
-              <button class="volume-btn" @click=${this._toggleVolume} aria-label="Volume">
-                ${unsafeHTML(volumeIcon(this._volume, 20, color))}
-              </button>
               ${this._volumeOpen ? html`
                 <div class="volume-slider">
                   <div class="volume-track" @mousedown=${this._handleVolumeMousedown}>
-                    <div class="volume-fill" style="width: ${vPct}; background-color: ${color}"></div>
-                    <div class="volume-thumb" style="left: ${vPct}; background-color: ${color}"></div>
+                    <div class="volume-fill" style="width: ${vPct}; background-color: ${color}; box-shadow: 0 0 6px ${color}"></div>
+                    <div class="volume-thumb" style="left: ${vPct}; background-color: ${color}; box-shadow: 0 0 4px ${color}"></div>
                   </div>
                 </div>
-              ` : nothing}
+              ` : html`
+                <button class="volume-btn" @click=${this._toggleVolume} aria-label="Volume">
+                  ${unsafeHTML(volumeIcon(this._volume, 24, color))}
+                </button>
+              `}
             </div>
             <div class="time">${this._formattedTime}</div>
           </div>

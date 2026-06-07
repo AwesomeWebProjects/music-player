@@ -138,7 +138,7 @@ export function startWaveformVisualizer(
           gradient.addColorStop(1, colorWithAlpha(opts.color, 0.4));
 
           ctx.save();
-          ctx.shadowColor = colorWithAlpha(opts.color, 0.5);
+          ctx.shadowColor = colorWithAlpha(opts.color, 0.3);
           ctx.shadowBlur = 8;
           drawRoundRect(ctx, x, y, barWidth, barHeight, BAR_RADIUS);
           ctx.fillStyle = gradient;

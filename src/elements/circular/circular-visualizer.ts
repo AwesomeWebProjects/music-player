@@ -4,6 +4,7 @@ const SCENE_PADDING = 120;
 const MIN_SIZE = 740;
 const OPTIMIZE_HEIGHT = 982;
 const BASE_TICK_SIZE = 10;
+const FULL_CIRCLE_DEG = 360;
 const LESSER = 160;
 const TRACKER_INNER_DELTA = 20;
 const TRACKER_LINE_WIDTH = 3;
@@ -32,17 +33,13 @@ interface VisualizerOptions {
 }
 
 function getTickPoints(countTicks: number): TickPoint[] {
-  const points: TickPoint[] = [];
-  for (let i = 0; i < countTicks; i++) {
-    const angle = (i * 360) / countTicks;
-    const rad = (angle * Math.PI) / 180;
-    points.push({
-      x: Math.cos(rad),
-      y: Math.sin(rad),
-      angle,
-    });
+  const step = FULL_CIRCLE_DEG / countTicks;
+  const coords: TickPoint[] = [];
+  for (let deg = 0; deg < FULL_CIRCLE_DEG; deg += step) {
+    const rad = (deg * Math.PI) / (FULL_CIRCLE_DEG / 2);
+    coords.push({ x: Math.cos(rad), y: -Math.sin(rad), angle: deg });
   }
-  return points;
+  return coords;
 }
 
 function computeTicks(
@@ -51,18 +48,15 @@ function computeTicks(
   scaleCoef: number,
   volume: number,
 ): TickSegment[] {
-  const countTicks = Math.floor(360 * scaleCoef);
+  const countTicks = Math.floor(FULL_CIRCLE_DEG * scaleCoef);
   const tickPoints = getTickPoints(countTicks);
   const ticks: TickSegment[] = [];
-  const length = tickPoints.length;
 
-  for (let i = 0; i < length; i++) {
-    const tick = tickPoints[i];
-    const dataIndex = i % frequencyData.length;
-    const freq = frequencyData[dataIndex];
-    const coef = 1 - i / (length * 2.5);
+  for (let i = 0; i < tickPoints.length; i++) {
+    const coef = 1 - i / (tickPoints.length * 2.5);
+    let delta = 0;
 
-    let delta: number;
+    const freq = frequencyData[i] || 0;
     if (volume === 0) {
       delta = 0;
     } else if (volume <= 0.5) {
@@ -70,14 +64,15 @@ function computeTicks(
     } else {
       delta = ((freq - LESSER * coef) * scaleCoef * volume) / 1;
     }
+
     if (delta < 0) delta = 0;
 
+    const tick = tickPoints[i];
     const k = sceneRadius / (sceneRadius - (BASE_TICK_SIZE + delta));
     const x1 = tick.x * (sceneRadius - BASE_TICK_SIZE);
     const y1 = tick.y * (sceneRadius - BASE_TICK_SIZE);
     const x2 = x1 * k;
     const y2 = y1 * k;
-
     ticks.push({ x1, y1, x2, y2 });
   }
 
@@ -91,12 +86,15 @@ function drawTick(
   tick: TickSegment,
   color: string,
 ): void {
-  const gradient = ctx.createLinearGradient(
-    cx + tick.x1, cy + tick.y1,
-    cx + tick.x2, cy + tick.y2,
-  );
-  gradient.addColorStop(0, colorWithAlpha(color, 0.3));
-  gradient.addColorStop(1, colorWithAlpha(color, 0.9));
+  const dx1 = Math.round(cx + tick.x1);
+  const dy1 = Math.round(cy + tick.y1);
+  const dx2 = Math.round(cx + tick.x2);
+  const dy2 = Math.round(cy + tick.y2);
+
+  const gradient = ctx.createLinearGradient(dx1, dy1, dx2, dy2);
+  gradient.addColorStop(0, color);
+  gradient.addColorStop(0.6, color);
+  gradient.addColorStop(1, '#F5F5F5');
 
   ctx.beginPath();
   ctx.strokeStyle = gradient;
@@ -113,12 +111,15 @@ function drawEdging(
   sceneRadius: number,
   color: string,
 ): void {
-  const trackerRadius = sceneRadius - TRACKER_INNER_DELTA;
+  const trackerR = sceneRadius - (TRACKER_INNER_DELTA + TRACKER_LINE_WIDTH / 2);
+
+  ctx.save();
   ctx.beginPath();
-  ctx.arc(cx, cy, trackerRadius, 0, Math.PI * 2);
-  ctx.strokeStyle = colorWithAlpha(color, 0.15);
+  ctx.strokeStyle = colorWithAlpha(color, 0.5);
   ctx.lineWidth = 1;
+  ctx.arc(cx, cy, trackerR, 0, Math.PI * 2, false);
   ctx.stroke();
+  ctx.restore();
 }
 
 function drawTracker(
@@ -129,26 +130,32 @@ function drawTracker(
   color: string,
   progress: number,
 ): void {
-  const trackerRadius = sceneRadius - TRACKER_INNER_DELTA;
-  const startAngle = -Math.PI / 2;
-  const endAngle = startAngle + progress * Math.PI * 2;
+  const trackerR = sceneRadius - (TRACKER_INNER_DELTA + TRACKER_LINE_WIDTH / 2);
+  const angle = progress * 2 * Math.PI;
 
-  // Progress arc
-  ctx.beginPath();
-  ctx.arc(cx, cy, trackerRadius, startAngle, endAngle);
+  if (angle <= 0) return;
+
+  // Draw progress arc
+  ctx.save();
   ctx.strokeStyle = colorWithAlpha(color, 0.8);
+  ctx.beginPath();
   ctx.lineWidth = TRACKER_LINE_WIDTH;
+  ctx.lineCap = 'round';
+  ctx.arc(cx, cy, trackerR, -Math.PI / 2, -Math.PI / 2 + angle, false);
   ctx.stroke();
+  ctx.restore();
 
-  // Dot at end of arc
-  if (progress > 0) {
-    const dotX = cx + trackerRadius * Math.cos(endAngle);
-    const dotY = cy + trackerRadius * Math.sin(endAngle);
-    ctx.beginPath();
-    ctx.arc(dotX, dotY, 5, 0, Math.PI * 2);
-    ctx.fillStyle = colorWithAlpha(color, 1);
-    ctx.fill();
-  }
+  // Draw position dot
+  const dotAngle = -Math.PI / 2 + angle;
+  const dotX = cx + trackerR * Math.cos(dotAngle);
+  const dotY = cy + trackerR * Math.sin(dotAngle);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.fillStyle = colorWithAlpha(color, 0.9);
+  ctx.arc(dotX, dotY, 5, 0, Math.PI * 2, false);
+  ctx.fill();
+  ctx.restore();
 }
 
 function drawStreamingIndicator(
@@ -159,23 +166,32 @@ function drawStreamingIndicator(
   color: string,
   timestamp: number,
 ): void {
-  const trackerRadius = sceneRadius - TRACKER_INNER_DELTA;
-  const segments = 50;
-  const speed = 0.002;
-  const tailLength = Math.PI * 0.6;
-  const headAngle = -Math.PI / 2 + (timestamp * speed) % (Math.PI * 2);
+  const trackerR = sceneRadius - (TRACKER_INNER_DELTA + TRACKER_LINE_WIDTH / 2);
 
-  for (let i = 0; i < segments; i++) {
-    const t = i / segments;
-    const opacity = t * t; // Quadratic fade-in
-    const segStart = headAngle - tailLength * (1 - i / segments);
-    const segEnd = headAngle - tailLength * (1 - (i + 1) / segments);
+  const speed = 0.0016;
+  const baseAngle = (timestamp * speed) % (Math.PI * 2);
+  const arcLength = Math.PI * 0.8;
+  const steps = 50;
+  const stepSize = arcLength / steps;
 
+  // Draw the arc as a series of tiny segments with fading opacity
+  // to create a comet-tail / light-trail effect
+  for (let i = 0; i < steps; i++) {
+    const t = i / steps; // 0 = tail, 1 = head
+    const opacity = t * t * 0.9; // quadratic fade-in toward the head
+    const startAngle = baseAngle + i * stepSize;
+    const endAngle = startAngle + stepSize + 0.005; // tiny overlap to avoid gaps
+
+    ctx.save();
+    ctx.strokeStyle = colorWithAlpha(color, opacity);
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.shadowColor = colorWithAlpha(color, opacity * 0.8);
+    ctx.shadowBlur = 12 * t;
     ctx.beginPath();
-    ctx.arc(cx, cy, trackerRadius, segStart, segEnd);
-    ctx.strokeStyle = colorWithAlpha(color, opacity * 0.6);
-    ctx.lineWidth = TRACKER_LINE_WIDTH;
+    ctx.arc(cx, cy, trackerR, startAngle, endAngle, false);
     ctx.stroke();
+    ctx.restore();
   }
 }
 
@@ -200,7 +216,7 @@ export function startCircularVisualizer(
   let hasDrawnOnce = false;
   let dragging = false;
 
-  const trackerRadius = sceneRadius - TRACKER_INNER_DELTA;
+  const trackerR = sceneRadius - (TRACKER_INNER_DELTA + TRACKER_LINE_WIDTH / 2);
 
   function angleToProgress(angle: number): number {
     // Normalize angle relative to -PI/2 (12 o'clock)
@@ -223,7 +239,7 @@ export function startCircularVisualizer(
   function handleSeek(e: MouseEvent): void {
     if (!opts.isFullSong || !opts.onSeek) return;
     const { angle, distance } = getAngleFromEvent(e);
-    if (Math.abs(distance - trackerRadius) < 20) {
+    if (Math.abs(distance - trackerR) < 20) {
       const progress = angleToProgress(angle);
       opts.onSeek(progress);
     }
@@ -231,7 +247,7 @@ export function startCircularVisualizer(
 
   canvas.addEventListener('mousedown', (e: MouseEvent) => {
     const { distance } = getAngleFromEvent(e);
-    if (Math.abs(distance - trackerRadius) < 20) {
+    if (Math.abs(distance - trackerR) < 20) {
       dragging = true;
       handleSeek(e);
     }
@@ -255,27 +271,40 @@ export function startCircularVisualizer(
 
     if (shouldDraw) {
       hasDrawnOnce = true;
-      ctx.clearRect(0, 0, size, size);
 
-      // Draw edging circle
-      drawEdging(ctx, cx, cy, sceneRadius, opts.color);
-
-      // Draw frequency ticks
+      // Update frequency data from analyser
       const analyser = getAnalyser();
       const frequencyData = getFrequencyData();
-      if (analyser && frequencyData && opts.enabled) {
+      if (analyser && frequencyData) {
         analyser.getByteFrequencyData(frequencyData);
-        const ticks = computeTicks(frequencyData, sceneRadius, scaleCoef, opts.volume);
-        for (const tick of ticks) {
-          drawTick(ctx, cx, cy, tick, opts.color);
-        }
       }
 
-      // Draw progress tracker or streaming indicator
+      ctx.clearRect(0, 0, size, size);
+
+      // Draw ticks
+      const ticks = computeTicks(
+        frequencyData ?? new Uint8Array(0),
+        sceneRadius,
+        scaleCoef,
+        opts.volume,
+      );
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.lineWidth = 1;
+      for (const tick of ticks) {
+        drawTick(ctx, cx, cy, tick, opts.color);
+      }
+      ctx.restore();
+
+      // Draw edging
+      drawEdging(ctx, cx, cy, sceneRadius, opts.color);
+
+      // Draw tracker
+      const progress = opts.getProgress();
       if (opts.isFullSong) {
-        const progress = opts.getProgress();
         drawTracker(ctx, cx, cy, sceneRadius, opts.color, progress);
-      } else if (opts.isPlaying) {
+      } else if (progress > 0) {
         drawStreamingIndicator(ctx, cx, cy, sceneRadius, opts.color, timestamp);
       }
     }

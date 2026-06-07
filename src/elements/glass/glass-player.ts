@@ -15,8 +15,8 @@ export class GlassPlayerElement extends BasePlayer {
 
   firstUpdated(): void {
     this._initVisualizer();
-    this.controller.on('play', () => this.visualizer?.update({ isPlaying: true }));
-    this.controller.on('pause', () => this.visualizer?.update({ isPlaying: false }));
+    this.controller.on('play', () => this._updateVisualizer());
+    this.controller.on('pause', () => this._updateVisualizer());
   }
 
   disconnectedCallback(): void {
@@ -29,14 +29,21 @@ export class GlassPlayerElement extends BasePlayer {
     if (!canvas) return;
     this.visualizer = startGlassVisualizer(
       canvas,
-      this.controller.analyserNode,
-      this.controller.frequencyData,
+      () => this.controller.analyserNode,
+      () => this.controller.frequencyData,
       {
         color: this.color,
         enabled: true,
         isPlaying: this._isPlaying,
       },
     );
+  }
+
+  private _updateVisualizer(): void {
+    this.visualizer?.update({
+      color: this.color,
+      isPlaying: this._isPlaying,
+    });
   }
 
   render() {
@@ -54,20 +61,20 @@ export class GlassPlayerElement extends BasePlayer {
           </div>
           <div class="controls">
             <button class="btn" @click=${() => this.controller.prev()} aria-label="Previous">
-              ${unsafeHTML(skipBackIcon(20, WHITE_BRIGHT))}
+              ${unsafeHTML(skipBackIcon(22, WHITE_BRIGHT))}
             </button>
             <button class="play-btn" @click=${() => this.controller.togglePlay()}
                     aria-label=${this._isPlaying ? 'Pause' : 'Play'}>
               ${this._isLoading
-                ? html`<span class="spin">${unsafeHTML(loaderIcon(24, WHITE_BRIGHT))}</span>`
-                : unsafeHTML(this._isPlaying ? pauseIcon(24, WHITE_BRIGHT) : playIcon(24, WHITE_BRIGHT))}
+                ? html`<span class="spin">${unsafeHTML(loaderIcon(28, WHITE_BRIGHT))}</span>`
+                : unsafeHTML(this._isPlaying ? pauseIcon(28, WHITE_BRIGHT) : playIcon(28, WHITE_BRIGHT))}
             </button>
             <button class="btn" @click=${() => this.controller.next()} aria-label="Next">
-              ${unsafeHTML(skipForwardIcon(20, WHITE_BRIGHT))}
+              ${unsafeHTML(skipForwardIcon(22, WHITE_BRIGHT))}
             </button>
           </div>
           <div class="progress-track" @mousedown=${this._handleProgressMousedown}>
-            <div class="progress-fill" style="width: ${this._isFullSong ? `${this._progress * 100}%` : '0%'}; background-color: ${color}"></div>
+            <div class="progress-fill" style="width: ${this._isFullSong ? `${this._progress * 100}%` : '0%'}; background-color: ${color}; box-shadow: 0 0 10px ${color}"></div>
             ${this._isPlaying && !this._isFullSong ? html`
               <div class="progress-shimmer" style="background: linear-gradient(90deg, transparent, ${color}, transparent)"></div>
             ` : nothing}

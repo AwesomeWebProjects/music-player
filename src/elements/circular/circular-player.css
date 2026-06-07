@@ -31,6 +31,7 @@
 }
 
 .song-info {
+  color: var(--rp-color, rgba(97, 218, 251, 0.8));
   position: absolute;
   z-index: 2;
   top: 2rem;
@@ -95,6 +96,7 @@
 }
 
 .footer {
+  color: var(--rp-color, rgba(97, 218, 251, 0.8));
   position: absolute;
   z-index: 2;
   bottom: 2rem;
@@ -147,6 +149,7 @@
   left: 0;
   height: 100%;
   border-radius: 2px;
+  transition: width 0.05s linear;
 }
 
 .volume-thumb {
@@ -156,6 +159,7 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
+  transition: left 0.05s linear;
 }
 
 .time {

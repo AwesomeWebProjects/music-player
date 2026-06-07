@@ -45,22 +45,22 @@ export class VinylPlayerElement extends BasePlayer {
           ` : nothing}
         </div>
         <div class="controls-row">
+          <span class="time">${this._formattedTime}</span>
           <div class="controls">
             <button class="btn" @click=${() => this.controller.prev()} aria-label="Previous">
-              ${unsafeHTML(skipBackIcon(18, color))}
+              ${unsafeHTML(skipBackIcon(20, color))}
             </button>
             <button class="play-btn" @click=${() => this.controller.togglePlay()}
                     aria-label=${this._isPlaying ? 'Pause' : 'Play'}
                     style="border-color: ${color}">
               ${this._isLoading
-                ? html`<span class="spin">${unsafeHTML(loaderIcon(20, color))}</span>`
-                : unsafeHTML(this._isPlaying ? pauseIcon(20, color) : playIcon(20, color))}
+                ? html`<span class="spin">${unsafeHTML(loaderIcon(24, color))}</span>`
+                : unsafeHTML(this._isPlaying ? pauseIcon(24, color) : playIcon(24, color))}
             </button>
             <button class="btn" @click=${() => this.controller.next()} aria-label="Next">
-              ${unsafeHTML(skipForwardIcon(18, color))}
+              ${unsafeHTML(skipForwardIcon(20, color))}
             </button>
           </div>
-          <span class="time">${this._formattedTime}</span>
           <div class="volume-area">
             <button class="btn" @click=${this._toggleVolume} aria-label="Volume">
               ${unsafeHTML(volumeIcon(this._volume, 18, color))}

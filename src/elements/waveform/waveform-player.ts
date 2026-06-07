@@ -64,17 +64,17 @@ export class WaveformPlayerElement extends BasePlayer {
           </div>
           <div class="controls">
             <button class="btn" @click=${() => this.controller.prev()} aria-label="Previous">
-              ${unsafeHTML(skipBackIcon(18, color))}
+              ${unsafeHTML(skipBackIcon(20, color))}
             </button>
             <button class="play-btn" @click=${() => this.controller.togglePlay()}
                     aria-label=${this._isPlaying ? 'Pause' : 'Play'}
                     style="border-color: ${color}">
               ${this._isLoading
-                ? html`<span class="spin">${unsafeHTML(loaderIcon(18, color))}</span>`
-                : unsafeHTML(this._isPlaying ? pauseIcon(18, color) : playIcon(18, color))}
+                ? html`<span class="spin">${unsafeHTML(loaderIcon(22, color))}</span>`
+                : unsafeHTML(this._isPlaying ? pauseIcon(22, color) : playIcon(22, color))}
             </button>
             <button class="btn" @click=${() => this.controller.next()} aria-label="Next">
-              ${unsafeHTML(skipForwardIcon(18, color))}
+              ${unsafeHTML(skipForwardIcon(20, color))}
             </button>
           </div>
           <div class="right-col">
