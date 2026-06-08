@@ -22,6 +22,7 @@ function drawRoundRect(
   h: number,
   r: number,
 ): void {
+  if (w <= 0 || h <= 0) return;
   if (r < 0) r = 0;
   if (h < r * 2) r = h / 2;
   if (w < r * 2) r = w / 2;
@@ -95,8 +96,15 @@ export function startWaveformVisualizer(
     const shouldDraw = opts.isPlaying || !hasDrawnOnce || dragging;
 
     if (shouldDraw) {
-      hasDrawnOnce = true;
       const { w, h } = dims;
+
+      // Skip drawing if canvas has no size (e.g. hidden with display:none)
+      if (w <= 0 || h <= 0) {
+        requestAnimationFrame(draw);
+        return;
+      }
+
+      hasDrawnOnce = true;
 
       // Reset transform and clear
       ctx.setTransform(1, 0, 0, 1, 0, 0);
