@@ -4,6 +4,9 @@
   "description": "Framework-agnostic audio player Web Components with multiple skins. Powered by @awesome-web-projects/audio-engine.",
   "author": "Daniel Barion (https://github.com/danielbarion)",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "main": "./dist/music-player.cjs",
   "module": "./dist/music-player.js",
