@@ -62,6 +62,12 @@ export class BasePlayer extends LitElement {
 
   private _bindControllerEvents(): void {
     this.controller.on('play', () => {
+      // If the element is hidden (e.g. view switched during loading),
+      // re-pause immediately so audio doesn't play in the background.
+      if (this.isConnected && !this.offsetParent) {
+        this.controller.pause();
+        return;
+      }
       this._isPlaying = true;
       this._isLoading = false;
     });
@@ -109,9 +115,7 @@ export class BasePlayer extends LitElement {
 
   /** Pause playback. Useful when hiding/switching players. */
   pause(): void {
-    if (this._isPlaying) {
-      this.controller.pause();
-    }
+    this.controller.pause();
   }
 
   protected _toggleVolume(): void {
