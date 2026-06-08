@@ -31,6 +31,16 @@ export class BasePlayer extends LitElement {
   protected controller!: PlayerController;
   private _keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 
+  /** Resolve worker URL, converting data URLs to blob URLs for proper origin. */
+  private _resolveWorkerURL(): string | URL {
+    const raw = new URL('../worker/audio-worker.js', import.meta.url);
+    if (raw.protocol === 'data:') {
+      const code = atob(raw.href.substring(raw.href.indexOf(',') + 1));
+      return URL.createObjectURL(new Blob([code], { type: 'text/javascript' }));
+    }
+    return raw;
+  }
+
   connectedCallback(): void {
     super.connectedCallback();
     this._volume = this.initialVolume;
@@ -38,7 +48,7 @@ export class BasePlayer extends LitElement {
       tracks: this.tracks,
       thread: this.thread as 'main' | 'worker',
       initialVolume: this.initialVolume,
-      workerURL: new URL('../worker/audio-worker.ts', import.meta.url),
+      workerURL: this._resolveWorkerURL(),
     });
     this._currentTrack = this.controller.currentTrack;
     this._bindControllerEvents();
