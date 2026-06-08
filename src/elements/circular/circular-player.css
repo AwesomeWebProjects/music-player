@@ -96,6 +96,9 @@
   height: 104px;
   padding: 0;
   transition: opacity 0.2s;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .play-btn:hover {
@@ -192,6 +195,7 @@
   border: 4px solid;
   opacity: 1;
   border-radius: 50%;
+  box-sizing: border-box;
   animation: loader 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
 }
 
