@@ -73,6 +73,8 @@ export class BasePlayer extends LitElement {
     });
     this.controller.on('trackchange', (track) => {
       this._currentTrack = track;
+      this._isFullSong = false;
+      this._progress = 0;
     });
     this.controller.on('timeupdate', (ct) => {
       this._formattedTime = formatTime(ct);
