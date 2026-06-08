@@ -22,6 +22,7 @@ function drawRoundRect(
   h: number,
   r: number,
 ): void {
+  if (r < 0) r = 0;
   if (h < r * 2) r = h / 2;
   if (w < r * 2) r = w / 2;
   ctx.beginPath();
