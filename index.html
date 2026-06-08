@@ -117,7 +117,11 @@
       btn.classList.add('active');
 
       ids.forEach(id => {
-        document.getElementById(id).classList.toggle('hidden', id !== view);
+        const el = document.getElementById(id);
+        const hiding = id !== view;
+        // Pause the player being hidden so music doesn't keep playing
+        if (hiding && el.pause) el.pause();
+        el.classList.toggle('hidden', hiding);
       });
     });
   </script>

@@ -107,6 +107,13 @@ export class BasePlayer extends LitElement {
     document.addEventListener('keydown', this._keydownHandler);
   }
 
+  /** Pause playback. Useful when hiding/switching players. */
+  pause(): void {
+    if (this._isPlaying) {
+      this.controller.pause();
+    }
+  }
+
   protected _toggleVolume(): void {
     this._volumeOpen = !this._volumeOpen;
   }
